@@ -1,30 +1,33 @@
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Container } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
+import "./Home.css";
 
 export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <Box
-      sx={{
-        textAlign: "center",
-        mt: 10,
-      }}
-    >
-      <Typography variant="h3" gutterBottom>
-        ⚡ Welcome to EV Battery Dashboard
-      </Typography>
-      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-        Manage and view all your EV batteries efficiently.
-      </Typography>
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{ mt: 3, borderRadius: 2 }}
-        onClick={() => navigate("/batteries/all")}
-      >
-        View All Batteries
-      </Button>
-    </Box>
+    <Container maxWidth="md" className="home-container">
+      <Box className="home-content">
+        <ElectricBoltIcon className="home-icon" />
+        <Typography variant="h3" className="home-title" gutterBottom>
+          EV Battery Dashboard
+        </Typography>
+
+        <Typography variant="subtitle1" className="home-subtitle" gutterBottom>
+          Manage, monitor, and optimize your EV battery data seamlessly.
+        </Typography>
+
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          className="home-btn"
+          onClick={() => navigate("/batteries/all")}
+        >
+          View All Batteries
+        </Button>
+      </Box>
+    </Container>
   );
 }

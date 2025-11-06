@@ -1,9 +1,26 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Button,
+  CircularProgress,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  Select,
+  Stack,
+} from "@mui/material";
+import SaveIcon from "@mui/icons-material/Save";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import "./EditBatery.css";
 
 export default function EditBattery() {
-  const { id } = useParams(); // ✅ to get battery ID from URL
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [batteryData, setBatteryData] = useState({
@@ -14,8 +31,10 @@ export default function EditBattery() {
     batteryType: "",
     sized: "",
   });
+
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState(null);
+
   useEffect(() => {
     const fetchBattery = async () => {
       try {
@@ -23,7 +42,7 @@ export default function EditBattery() {
         setBatteryData(res.data);
       } catch (error) {
         console.error("Error fetching battery data", error);
-        setError("Error fetching battery data");
+        setError("Failed to load battery details");
       } finally {
         setDataLoading(false);
       }
@@ -35,126 +54,150 @@ export default function EditBattery() {
     const { name, value } = e.target;
     setBatteryData({ ...batteryData, [name]: value });
   };
+
   const handleFileChange = (e) => {
     setBatteryData({ ...batteryData, image: e.target.files[0] });
   };
 
-  // ✅ 5️⃣ Submit updated data via PUT request
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const formData = new FormData();
-    for (const key in batteryData) {
-      formData.append(key, batteryData[key]);
+    e.preventDefault();
+    try {
+      const formData = new FormData();
+      for (const key in batteryData) {
+        formData.append(key, batteryData[key]);
+      }
+
+      const res = await fetch(`http://localhost:1000/batteries/${id}/edit`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Server error: ${res.status} - ${text}`);
+      }
+
+      const data = await res.json();
+      console.log("Updated:", data);
+      navigate("/batteries/all");
+    } catch (error) {
+      console.error("Error updating battery:", error);
+      setError("Failed to update battery");
     }
+  };
 
-    // ✅ Correct route (was /view before)
-    const res = await fetch(`http://localhost:1000/batteries/${id}/edit`, {
-      method: "PUT",
-      body: formData,
-    });
+  if (dataLoading)
+    return (
+      <Box className="loading-box">
+        <CircularProgress size={50} color="primary" />
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Loading battery details...
+        </Typography>
+      </Box>
+    );
 
-    // ✅ Defensive check
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Server error: ${res.status} - ${text}`);
-    }
+  if (error)
+    return (
+      <Typography color="error" align="center" sx={{ mt: 5 }}>
+        {error}
+      </Typography>
+    );
 
-    const data = await res.json();
-    console.log("Updated:", data);
-    navigate("/batteries/all");
-  } catch (error) {
-    console.error("Error updating battery:", error);
-    setError("Failed to update battery");
-  }
-};
-
-
-  
-  if (dataLoading) return <h3>Loading battery details...</h3>;
-  if (error) return <h3 style={{ color: "red" }}>{error}</h3>;
-
-  
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Edit Battery Details</h2>
+    <Box className="editbattery-container">
+      <Card className="editbattery-card" elevation={4}>
+        <CardContent>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
+            Edit Battery Details
+          </Typography>
 
-      <form onSubmit={handleSubmit} encType="multipart/form-data">
-        <label htmlFor="batteryname">Battery Name : </label>
-        <input
-          type="text"
-          name="batteryname"
-          value={batteryData.batteryname}
-          id="batteryname"
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
+          <form onSubmit={handleSubmit} encType="multipart/form-data">
+            <Stack spacing={3}>
+              <TextField
+                label="Battery Name"
+                name="batteryname"
+                value={batteryData.batteryname}
+                onChange={handleChange}
+                fullWidth
+                required
+              />
 
-        <label htmlFor="image">Image:</label>
-        <input
-          type="file"
-          name="image"
-          id="image"
-          onChange={handleFileChange}
-          accept="image/*"
-        />
-        <br /><br />
+              <Button variant="outlined" component="label">
+                Upload Image
+                <input type="file" hidden onChange={handleFileChange} accept="image/*" />
+              </Button>
 
-        <label htmlFor="voltage">Voltage : </label>
-        <input
-          type="text"
-          name="voltage"
-          value={batteryData.voltage}
-          id="voltage"
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
+              <TextField
+                label="Voltage (V)"
+                name="voltage"
+                value={batteryData.voltage}
+                onChange={handleChange}
+                fullWidth
+                required
+              />
 
-        <label htmlFor="batteryWeight">Weight : </label>
-        <input
-          type="number"
-          name="batteryWeight"
-          value={batteryData.batteryWeight}
-          id="batteryWeight"
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
+              <TextField
+                label="Weight (kg)"
+                name="batteryWeight"
+                value={batteryData.batteryWeight}
+                onChange={handleChange}
+                fullWidth
+                type="number"
+                required
+              />
 
-        <label htmlFor="batteryType">Battery Type : </label>
-        <select
-          name="batteryType"
-          id="batteryType"
-          value={batteryData.batteryType}
-          onChange={handleChange}
-          required
-        >
-          <option value="">Select Type</option>
-          <option value="c-type">C-type</option>
-          <option value="normal">Normal</option>
-          <option value="roll">Roll</option>
-        </select>
-        &nbsp;
+              <FormControl fullWidth required>
+                <InputLabel>Battery Type</InputLabel>
+                <Select
+                  name="batteryType"
+                  value={batteryData.batteryType}
+                  onChange={handleChange}
+                  label="Battery Type"
+                >
+                  <MenuItem value="c-type">C-type</MenuItem>
+                  <MenuItem value="normal">Normal</MenuItem>
+                  <MenuItem value="roll">Roll</MenuItem>
+                </Select>
+              </FormControl>
 
-        <label htmlFor="sized">Sized :</label>
-        <select
-          name="sized"
-          id="sized"
-          value={batteryData.sized}
-          onChange={handleChange}
-          required
-        >
-          <option value="">Select Size</option>
-          <option value="small">Small</option>
-          <option value="medium">Medium</option>
-          <option value="large">Large</option>
-        </select>
-        <br /><br />
+              <FormControl fullWidth required>
+                <InputLabel>Size</InputLabel>
+                <Select
+                  name="sized"
+                  value={batteryData.sized}
+                  onChange={handleChange}
+                  label="Size"
+                >
+                  <MenuItem value="small">Small</MenuItem>
+                  <MenuItem value="medium">Medium</MenuItem>
+                  <MenuItem value="large">Large</MenuItem>
+                </Select>
+              </FormControl>
 
-        <button type="submit">Update</button>
-      </form>
-    </div>
+              <Stack direction="row" spacing={2} justifyContent="center">
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  startIcon={<SaveIcon />}
+                  sx={{ borderRadius: "25px", px: 4 }}
+                >
+                  Update
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  startIcon={<ArrowBackIcon />}
+                  onClick={() => navigate("/batteries/all")}
+                  sx={{ borderRadius: "25px", px: 3 }}
+                >
+                  Cancel
+                </Button>
+              </Stack>
+            </Stack>
+          </form>
+        </CardContent>
+      </Card>
+    </Box>
   );
 }

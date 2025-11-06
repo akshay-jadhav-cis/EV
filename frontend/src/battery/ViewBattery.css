@@ -1,0 +1,51 @@
+/* ViewBattery.css */
+
+.viewbattery-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f3f8ff, #ffffff);
+}
+
+.viewbattery-card {
+  max-width: 500px;
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 16px !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
+  transition: transform 0.3s ease;
+}
+
+.viewbattery-card:hover {
+  transform: translateY(-5px);
+}
+
+.battery-image {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  object-fit: cover;
+}
+
+.loading-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 5rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .viewbattery-card {
+    width: 95%;
+    padding: 1rem;
+  }
+
+  .battery-image {
+    width: 100%;
+    border-radius: 10px;
+  }
+}
