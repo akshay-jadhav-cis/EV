@@ -12,6 +12,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/users':{
+        target: 'http://localhost:1000',
+        changeOrigin: true,
+        secure: false,
+      }
     },
   },
+   historyApiFallback: true,
 })

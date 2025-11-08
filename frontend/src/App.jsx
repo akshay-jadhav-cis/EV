@@ -8,6 +8,8 @@ import AddBatery from "./battery/AddBatery.jsx";
 import ViewBatery from "./battery/ViewBatery.jsx";
 import EditBatery from "./battery/EditBatery.jsx";
 import "./App.css";
+import UserSignupPage from "./users/UserSignupPage.jsx";
+import UserLoginPage from "./users/UserLoginPage.jsx";
 
 function App() {
   return (
@@ -37,10 +39,10 @@ function App() {
           <Route path="/batteries/add" element={<AddBatery />} />
           <Route path="/batteries/:id/view" element={<ViewBatery />} />
           <Route path="/batteries/:id/edit" element={<EditBatery />} />
+          <Route path="/users/signup"element={<UserSignupPage/>}/>
+          <Route path="/users/login" element={<UserLoginPage/>}/>
         </Routes>
-      </Container>
-
-      
+      </Container> 
       <Box component="footer" className="footer">
         <Typography variant="body2">© {new Date().getFullYear()} Battery Management App</Typography>
       </Box>
