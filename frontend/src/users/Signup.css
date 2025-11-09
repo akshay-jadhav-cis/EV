@@ -1,0 +1,20 @@
+/* optional small polish; only needed if you import it */
+body {
+  font-family: "Poppins", "Roboto", sans-serif;
+}
+
+.MuiPaper-root {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.MuiPaper-root:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(21, 38, 71, 0.08);
+}
+
+/* smaller heading on tiny screens */
+@media (max-width: 420px) {
+  .MuiTypography-h6 {
+    font-size: 1rem;
+  }
+}

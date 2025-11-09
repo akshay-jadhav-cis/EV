@@ -1,0 +1,18 @@
+.login-container {
+  font-family: "Poppins", "Roboto", sans-serif;
+}
+
+.MuiPaper-root {
+  transition: all 0.3s ease-in-out;
+}
+
+.MuiPaper-root:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 600px) {
+  .MuiTypography-h5 {
+    font-size: 1.3rem;
+  }
+}

@@ -5,10 +5,7 @@ const mongoose = require("mongoose");
 const path = require("path");
 const PORT = process.env.PORT;
 const methodOverride = require("method-override");
-const Battery = require("./models/Battery");
 const cors = require("cors");
-
-const multer = require("multer");
 const batteryRoute = require("./routes/batteryRoute");
 const userRoute = require("./routes/userRoute");
 async function main() {
