@@ -64,7 +64,10 @@ export default function EditBattery() {
     try {
       const formData = new FormData();
       for (const key in batteryData) {
-        formData.append(key, batteryData[key]);
+         if (["_id", "__v"].includes(key)) continue;
+        if (key !== "image" || batteryData.image instanceof File) {
+          formData.append(key, batteryData[key]);
+        }
       }
 
       const res = await fetch(`http://localhost:1000/batteries/${id}/edit`, {
@@ -72,19 +75,17 @@ export default function EditBattery() {
         body: formData,
       });
 
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Server error: ${res.status} - ${text}`);
-      }
-
       const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
       console.log("Updated:", data);
       navigate("/batteries/all");
     } catch (error) {
       console.error("Error updating battery:", error);
-      setError("Failed to update battery");
+      setError("Failed to update battery: " + error.message);
     }
   };
+
 
   if (dataLoading)
     return (

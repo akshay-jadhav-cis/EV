@@ -80,7 +80,13 @@ export default function AddBattery() {
 
               <Button variant="outlined" component="label">
                 Upload Image
-                <input type="file" hidden onChange={handleFileChange} accept="image/*" />
+                <input
+                  type="file"
+                  name="image"          
+                  hidden
+                  onChange={handleFileChange}
+                  accept="image/*"
+                />
               </Button>
 
               {previewImage && (

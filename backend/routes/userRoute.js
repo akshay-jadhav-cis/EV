@@ -3,8 +3,9 @@ const express=require("express");
 const userRoute=express.Router();
 const User=require("../models/User");
 const{hashPassword,hashCompare}=require("../utils/Password");
-userRoute.post("/signup", async (req, res) => {
-  try {
+const wrapAsync = require("../utils/wrapAsync");
+userRoute.post("/signup", wrapAsync(async (req, res) => {
+  
     const { user } = req.body;
 
     let hasvehicle = "no";
@@ -22,13 +23,10 @@ userRoute.post("/signup", async (req, res) => {
 
     await newUser.save();
     res.status(201).json({ success: true, message: "User signed up successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Signup failed", details: err.message });
-  }
-});
-userRoute.post("/login", async (req, res) => {
-  try {
+ 
+}));
+userRoute.post("/login",wrapAsync (async (req, res) => {
+ 
     const { user } = req.body;
     const findUser = await User.findOne({ name: user.name });
 
@@ -48,10 +46,7 @@ userRoute.post("/login", async (req, res) => {
         hasvehicle: findUser.hasvehicle,
       },
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error", details: err.message });
-  }
-});
+ 
+}));
 
 module.exports=userRoute;
