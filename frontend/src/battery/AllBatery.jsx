@@ -7,13 +7,12 @@ import {
   CardMedia,
   Typography,
   CircularProgress,
+  Grid,
   Button,
-  CardActionArea,
-  Grid, 
 } from "@mui/material";
-
 import { useNavigate } from "react-router-dom";
-export default function AllBatery() {
+
+export default function AllBattery() {
   const navigate = useNavigate();
   const [batteries, setBatteries] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -21,11 +20,31 @@ export default function AllBatery() {
   useEffect(() => {
     setLoading(true);
     axios
-      .get("http://localhost:1000/batteries/all")
+      .get("http://localhost:1000/batteries/all", { withCredentials: true })
       .then((res) => setBatteries(res.data))
       .catch((err) => console.error("Error fetching batteries:", err))
       .finally(() => setLoading(false));
   }, []);
+
+  // ✅ Function to check session before navigating
+  const handleAddBatteryClick = async () => {
+    try {
+      const res = await axios.get("http://localhost:1000/users/check-session", {
+        withCredentials: true,
+      });
+
+      if (res.data.loggedIn) {
+        navigate("/batteries/add");
+      } else {
+        alert("You must log in before adding a battery.");
+        navigate("/users/login");
+      }
+    } catch (err) {
+      console.error("Error checking login:", err);
+      alert("Session check failed. Please log in again.");
+      navigate("/users/login");
+    }
+  };
 
   return (
     <>
@@ -40,15 +59,20 @@ export default function AllBatery() {
         </Typography>
 
         {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight="50vh"
+          >
             <CircularProgress />
           </Box>
         ) : (
           <Grid container spacing={3} justifyContent="center">
             {batteries.map((battery, index) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={index}>
+              <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
                 <Card
-                  onClick={() => navigate(`/batteries/${battery._id}/view`)} 
+                  onClick={() => navigate(`/batteries/${battery._id}/view`)}
                   sx={{
                     borderRadius: 3,
                     cursor: "pointer",
@@ -92,20 +116,24 @@ export default function AllBatery() {
         )}
       </Box>
 
+      {/* ✅ Protected Add Battery Button */}
       <Box display="flex" justifyContent="center" mt={4}>
-        <button
-          onClick={() => navigate("/batteries/add")}
-          style={{
-            padding: "10px 20px",
+        <Button
+          onClick={handleAddBatteryClick}
+          variant="contained"
+          sx={{
             backgroundColor: "#1976d2",
             color: "white",
-            border: "none",
             borderRadius: "8px",
-            cursor: "pointer",
+            textTransform: "none",
+            px: 3,
+            py: 1,
+            fontWeight: 600,
+            "&:hover": { backgroundColor: "#125ca1" },
           }}
         >
           ➕ Add New Battery
-        </button>
+        </Button>
       </Box>
     </>
   );

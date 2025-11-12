@@ -9,6 +9,9 @@ const cors = require("cors");
 const batteryRoute = require("./routes/batteryRoute");
 const userRoute = require("./routes/userRoute");
 const ExpressError=require("./utils/ExpressError")
+const session=require("express-session");
+const cookieparser=require("cookie-parser");
+const MongoStore = require('connect-mongo');
 async function main() {
     await mongoose.connect(process.env.MONGO_URL);
 }
@@ -18,7 +21,7 @@ main().then(() => {
 }).catch((e) => {
     console.error("Error occurred During the Database Connection = ",e);
 });
-
+app.use(cookieparser());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -28,9 +31,30 @@ app.use(cors({
     origin: "http://localhost:2000",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
+}))
+app.use(session({
+  secret: process.env.SESSION_SECRET_CODE,
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URL,
+    collectionName: 'sessions',
+    ttl: 14 * 24 * 60 * 60, 
+    autoRemove: 'native'
+  }),
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 * 7, 
+    httpOnly: true,
+    secure: false, // use true only if HTTPS
+    sameSite: 'lax'
+  }
 }));
+
 app.use("/batteries",batteryRoute);
 app.use("/users",userRoute);
+app.use((req,res,next)=>{
+    res.locals.currentUser=req.session.user;
+});
 app.use((req,res,next)=>{
     next(new ExpressError("Page Not Found",404));
 })

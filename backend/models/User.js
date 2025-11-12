@@ -19,7 +19,11 @@ const userSchema=new Schema({
     hasvehicle:{
         type:String,
         enum:["yes","no"]
-    }
+    },
+    battery:[{
+        type:Schema.Types.ObjectId,
+        ref:"battery"
+    }]
 });
 const User=new mongoose.model("user",userSchema);
 module.exports=User;

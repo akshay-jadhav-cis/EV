@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import axios from "axios";
 import "./AddBatery.css";
 
 export default function AddBattery() {
@@ -29,6 +30,22 @@ export default function AddBattery() {
   });
   const [previewImage, setPreviewImage] = useState(null);
 
+  // ✅ check login when page loads
+  useEffect(() => {
+    axios
+      .get("http://localhost:1000/users/check-session", { withCredentials: true })
+      .then((res) => {
+        if (!res.data.loggedIn) {
+          alert("Please log in to add a battery.");
+          navigate("/users/login");
+        }
+      })
+      .catch((err) => {
+        console.error("Error checking session:", err);
+        navigate("/users/login");
+      });
+  }, [navigate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setBatteryData({ ...batteryData, [name]: value });
@@ -42,20 +59,27 @@ export default function AddBattery() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const formData = new FormData();
       for (const key in batteryData) {
         formData.append(key, batteryData[key]);
       }
-      const res = await fetch("http://localhost:1000/batteries/add", {
-        method: "POST",
-        body: formData,
+
+      const res = await axios.post("http://localhost:1000/batteries/add", formData, {
+        withCredentials: true, // ✅ include session cookie
       });
-      const data = await res.json();
-      console.log("Created:", data);
-      navigate("/batteries/all");
+
+      if (res.data.success) {
+        alert("Battery added successfully!");
+        navigate("/batteries/all");
+      } else {
+        alert(res.data.message || "Failed to add battery");
+      }
     } catch (error) {
       console.error("Error submitting battery:", error);
+      alert("You must be logged in to add a battery.");
+      navigate("/users/login");
     }
   };
 
@@ -82,7 +106,7 @@ export default function AddBattery() {
                 Upload Image
                 <input
                   type="file"
-                  name="image"          
+                  name="image"
                   hidden
                   onChange={handleFileChange}
                   accept="image/*"
@@ -95,6 +119,7 @@ export default function AddBattery() {
                     src={previewImage}
                     alt="Preview"
                     className="preview-image"
+                    required
                   />
                 </Box>
               )}
@@ -146,7 +171,12 @@ export default function AddBattery() {
                 </Select>
               </FormControl>
 
-              <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
+              <Stack
+                direction="row"
+                spacing={2}
+                justifyContent="center"
+                sx={{ mt: 2 }}
+              >
                 <Button
                   type="submit"
                   variant="contained"

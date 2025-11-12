@@ -1,5 +1,5 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
+import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Box,
@@ -14,6 +14,7 @@ import {
   FormControl,
   Select,
   Stack,
+  Alert,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -32,23 +33,39 @@ export default function EditBattery() {
     sized: "",
   });
 
-  const [dataLoading, setDataLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
+  // ✅ Check login + fetch battery details
   useEffect(() => {
-    const fetchBattery = async () => {
+    const checkLoginAndFetchBattery = async () => {
       try {
-        const res = await axios.get(`http://localhost:1000/batteries/${id}/edit`);
+        // Check if user is logged in
+        const sessionRes = await axios.get("http://localhost:1000/users/check-session", {
+          withCredentials: true,
+        });
+
+        if (!sessionRes.data.loggedIn) {
+          alert("Please log in to edit this battery.");
+          navigate("/users/login");
+          return;
+        }
+
+        // Fetch battery details
+        const res = await axios.get(`http://localhost:1000/batteries/${id}/edit`, {
+          withCredentials: true,
+        });
         setBatteryData(res.data);
-      } catch (error) {
-        console.error("Error fetching battery data", error);
-        setError("Failed to load battery details");
+      } catch (err) {
+        console.error("Error fetching battery:", err);
+        setError("Failed to load battery details. Please log in again.");
       } finally {
-        setDataLoading(false);
+        setLoading(false);
       }
     };
-    fetchBattery();
-  }, [id]);
+
+    checkLoginAndFetchBattery();
+  }, [id, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -64,7 +81,7 @@ export default function EditBattery() {
     try {
       const formData = new FormData();
       for (const key in batteryData) {
-         if (["_id", "__v"].includes(key)) continue;
+        if (["_id", "__v"].includes(key)) continue;
         if (key !== "image" || batteryData.image instanceof File) {
           formData.append(key, batteryData[key]);
         }
@@ -73,12 +90,13 @@ export default function EditBattery() {
       const res = await fetch(`http://localhost:1000/batteries/${id}/edit`, {
         method: "PUT",
         body: formData,
+        credentials: "include", // ✅ include cookie
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      console.log("Updated:", data);
+      alert("✅ Battery updated successfully!");
       navigate("/batteries/all");
     } catch (error) {
       console.error("Error updating battery:", error);
@@ -86,8 +104,7 @@ export default function EditBattery() {
     }
   };
 
-
-  if (dataLoading)
+  if (loading)
     return (
       <Box className="loading-box">
         <CircularProgress size={50} color="primary" />
@@ -99,9 +116,9 @@ export default function EditBattery() {
 
   if (error)
     return (
-      <Typography color="error" align="center" sx={{ mt: 5 }}>
+      <Alert severity="error" sx={{ mt: 5, mx: "auto", width: "fit-content" }}>
         {error}
-      </Typography>
+      </Alert>
     );
 
   return (
@@ -124,7 +141,7 @@ export default function EditBattery() {
               />
 
               <Button variant="outlined" component="label">
-                Upload Image
+                Upload New Image
                 <input type="file" hidden onChange={handleFileChange} accept="image/*" />
               </Button>
 

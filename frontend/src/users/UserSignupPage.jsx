@@ -12,12 +12,15 @@ import {
   MenuItem,
   useMediaQuery,
   FormHelperText,
+  InputAdornment,
+  Alert,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 import HomeIcon from "@mui/icons-material/Home";
 import LockIcon from "@mui/icons-material/Lock";
-import './Signup.css';
+import "./Signup.css";
+
 export default function UserSignupPage() {
   const [user, setUser] = useState({
     name: "",
@@ -27,13 +30,15 @@ export default function UserSignupPage() {
     hasvehicle: "no",
   });
   const [errors, setErrors] = useState({});
+  const [serverMessage, setServerMessage] = useState("");
+  const [serverError, setServerError] = useState("");
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width:600px)");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    // keep mobile number numeric string (can sanitize on server)
     setUser((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" })); // clear error while typing
   };
 
   const validate = () => {
@@ -50,28 +55,30 @@ export default function UserSignupPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setServerError("");
+    setServerMessage("");
+
     if (!validate()) return;
 
     try {
-      // use relative path in production; change to full URL if needed
-      const res = await fetch("/users/signup", {
+      const res = await fetch("http://localhost:1000/users/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // ✅ needed if backend uses express-session
         body: JSON.stringify({ user }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Signup failed");
+        throw new Error(data.message || "Signup failed");
       }
 
-      const data = await res.json();
-      // optionally show success notification here
-      navigate("/batteries/all");
+      setServerMessage("✅ Signup successful! Redirecting...");
+      setTimeout(() => navigate("/batteries/all"), 1500);
     } catch (error) {
       console.error("Signup error:", error);
-      // you can replace alert with a snackbar/toast
-      alert(error.message || "Something went wrong during signup");
+      setServerError(error.message || "Something went wrong during signup");
     }
   };
 
@@ -105,6 +112,18 @@ export default function UserSignupPage() {
           Quick sign up — you’ll be redirected after successful registration.
         </Typography>
 
+        {/* ✅ Success or error messages */}
+        {serverMessage && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {serverMessage}
+          </Alert>
+        )}
+        {serverError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {serverError}
+          </Alert>
+        )}
+
         <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 1 }}>
           <TextField
             fullWidth
@@ -113,7 +132,13 @@ export default function UserSignupPage() {
             value={user.name}
             onChange={handleChange}
             margin="normal"
-            InputProps={{ startAdornment: <PersonIcon sx={{ mr: 1 }} /> }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PersonIcon />
+                </InputAdornment>
+              ),
+            }}
             error={!!errors.name}
             helperText={errors.name}
           />
@@ -126,7 +151,13 @@ export default function UserSignupPage() {
             value={user.password}
             onChange={handleChange}
             margin="normal"
-            InputProps={{ startAdornment: <LockIcon sx={{ mr: 1 }} /> }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockIcon />
+                </InputAdornment>
+              ),
+            }}
             error={!!errors.password}
             helperText={errors.password || "Minimum 6 characters"}
           />
@@ -138,7 +169,13 @@ export default function UserSignupPage() {
             value={user.location}
             onChange={handleChange}
             margin="normal"
-            InputProps={{ startAdornment: <HomeIcon sx={{ mr: 1 }} /> }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <HomeIcon />
+                </InputAdornment>
+              ),
+            }}
             error={!!errors.location}
             helperText={errors.location}
           />
@@ -151,12 +188,18 @@ export default function UserSignupPage() {
             onChange={handleChange}
             margin="normal"
             inputProps={{ maxLength: 10 }}
-            InputProps={{ startAdornment: <PhoneAndroidIcon sx={{ mr: 1 }} /> }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PhoneAndroidIcon />
+                </InputAdornment>
+              ),
+            }}
             error={!!errors.mobilenumber}
             helperText={errors.mobilenumber}
           />
 
-          <FormControl fullWidth margin="normal" error={!!errors.hasvehicle}>
+          <FormControl fullWidth margin="normal">
             <InputLabel id="vehicle-label">Do you have a vehicle?</InputLabel>
             <Select
               labelId="vehicle-label"
@@ -195,7 +238,7 @@ export default function UserSignupPage() {
           sx={{ mt: 2, color: "text.secondary" }}
         >
           Already registered?{" "}
-          <a href="/login" style={{ color: "#1976d2", textDecoration: "none" }}>
+          <a href="/users/login" style={{ color: "#1976d2", textDecoration: "none" }}>
             Log in
           </a>
         </Typography>

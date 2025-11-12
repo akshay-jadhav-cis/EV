@@ -6,19 +6,28 @@ const Battery = require("../models/Battery");
 const { batteryValidation } = require("../utils/SchemaValidation");
 const upload = multer({ dest: "uploads/" });
 const wrapAsync=require("../utils/wrapAsync");
-batteryRoute.get("/all", wrapAsync(async (req, res) => {
+const { isLoggedIn } = require("../utils/Valid");
+const User=require("../models/User");
+batteryRoute.get("/all",wrapAsync(async (req, res) => {
     const batteries = await Battery.find();
     res.json(batteries);
 }));
 
-batteryRoute.post("/add", upload.single("image"), wrapAsync(async (req, res) => {
-  
+batteryRoute.post(
+  "/add",
+  isLoggedIn,
+  upload.single("image"),
+  wrapAsync(async (req, res) => {
     const { error } = batteryValidation.validate(req.body);
     if (error) {
-      return res.status(400).json({ success: false, message: error.details[0].message });
+      return res
+        .status(400)
+        .json({ success: false, message: error.details[0].message });
     }
 
     const { batteryname, voltage, batteryWeight, batteryType, sized } = req.body;
+
+    // ✅ new battery linked to logged-in user
     const newBattery = new Battery({
       batteryname,
       voltage,
@@ -26,15 +35,23 @@ batteryRoute.post("/add", upload.single("image"), wrapAsync(async (req, res) => 
       batteryType,
       sized,
       image: req.file ? req.file.filename : null,
+      owner: req.session.user.id, 
     });
 
     await newBattery.save();
-    res.status(201).json({ success: true, message: "Battery added successfully", battery: newBattery });
-  
-}));
+
+    res.status(201).json({
+      success: true,
+      message: "Battery added successfully",
+      battery: newBattery,
+    });
+  })
+);
 
 
-batteryRoute.get("/:id/view", (async (req, res) => {
+
+
+batteryRoute.get("/:id/view", isLoggedIn,(async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -51,7 +68,7 @@ batteryRoute.get("/:id/view", (async (req, res) => {
   }
 }));
 
-batteryRoute.get("/:id/edit", wrapAsync(async (req, res) => {
+batteryRoute.get("/:id/edit", isLoggedIn,wrapAsync(async (req, res) => {
   
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -65,57 +82,57 @@ batteryRoute.get("/:id/edit", wrapAsync(async (req, res) => {
  
 }));
 
-batteryRoute.put("/:id/edit", upload.single("image"), wrapAsync(async (req, res) => {
-  
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid battery ID" });
-    }
+batteryRoute.put("/:id/edit", isLoggedIn, upload.single("image"), wrapAsync(async (req, res) => {
+  const { id } = req.params;
 
-    const { error } = batteryValidation.validate(req.body);
-    if (error) {
-      return res.status(400).json({ success: false, message: error.details[0].message });
-    }
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: "Invalid battery ID" });
+  }
 
-    const updatedData = { ...req.body };
-    if (req.file) updatedData.image = req.file.filename;
+  const battery = await Battery.findById(id);
+  if (!battery) {
+    return res.status(404).json({ success: false, message: "Battery not found" });
+  }
 
-    const updatedBattery = await Battery.findByIdAndUpdate(id, updatedData, {
-      new: true,
-      runValidators: true,
-    });
+  if (battery.owner.toString() !== req.session.user.id) {
+    return res.status(403).json({ success: false, message: "You are not authorized to edit this battery." });
+  }
 
-    if (!updatedBattery) {
-      return res.status(404).json({ success: false, message: "Battery not found" });
-    }
+  const updatedData = { ...req.body };
+  if (req.file) updatedData.image = req.file.filename;
 
-    res.status(200).json({
-      success: true,
-      message: "Battery updated successfully",
-      battery: updatedBattery,
-    });
- 
+  const updatedBattery = await Battery.findByIdAndUpdate(id, updatedData, {
+    new: true,
+    runValidators: true,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Battery updated successfully",
+    battery: updatedBattery,
+  });
 }));
 
+batteryRoute.delete("/:id/delete", isLoggedIn, wrapAsync(async (req, res) => {
+  const { id } = req.params;
 
-batteryRoute.delete("/:id/delete",wrapAsync( async (req, res) => {
-  
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid battery ID" });
-    }
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: "Invalid battery ID" });
+  }
 
-    const deletedBattery = await Battery.findByIdAndDelete(id);
-    if (!deletedBattery) {
-      return res.status(404).json({ success: false, message: "Battery not found" });
-    }
+  const battery = await Battery.findById(id);
+  if (!battery) {
+    return res.status(404).json({ success: false, message: "Battery not found" });
+  }
 
-    res.status(200).json({
-      success: true,
-      message: "Battery deleted successfully",
-      battery: deletedBattery,
-    });
-  
+  // ✅ Ownership check
+  if (battery.owner.toString() !== req.session.user.id) {
+    return res.status(403).json({ success: false, message: "You are not authorized to delete this battery." });
+  }
+
+  await Battery.findByIdAndDelete(id);
+  res.status(200).json({ success: true, message: "Battery deleted successfully" });
 }));
+
 
 module.exports = batteryRoute;

@@ -1,4 +1,3 @@
-const mongoose=require("mongoose");
 const express=require("express");
 const userRoute=express.Router();
 const User=require("../models/User");
@@ -37,16 +36,35 @@ userRoute.post("/login",wrapAsync (async (req, res) => {
     if (!checkPassword) {
       return res.status(401).json({ error: "Password mismatch" });
     }
+    
+      req.session.user = {
+    id: findUser._id,
+    name: findUser.name,
+    location: findUser.location,
+    hasvehicle: findUser.hasvehicle,
+  };
     res.json({
       success: true,
       message: "Login successful",
-      user: {
-        name: findUser.name,
-        location: findUser.location,
-        hasvehicle: findUser.hasvehicle,
-      },
+      user: req.session.user,
     });
  
 }));
+// in userRoute.js
+userRoute.get("/check-session", (req, res) => {
+  if (req.session.user) {
+    res.json({ loggedIn: true, user: req.session.user });
+  } else {
+    res.json({ loggedIn: false });
+  }
+});
+
+userRoute.post("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) return res.status(500).json({ success: false, message: "Logout failed" });
+    res.clearCookie("connect.sid");
+    res.json({ success: true, message: "Logged out successfully" });
+  });
+});
 
 module.exports=userRoute;

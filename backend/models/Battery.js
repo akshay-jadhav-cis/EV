@@ -26,7 +26,12 @@ const batterySchema=new Schema({
     sized:{
         type:String,
         enum:["small","large","medium"],
-    }
+    },
+     owner: { 
+    type: Schema.Types.ObjectId,
+    ref: "user",
+    required: true
+  },
 },{timestamps:true});
 const Battery=new mongoose.model("Battery",batterySchema);
 module.exports=Battery;
