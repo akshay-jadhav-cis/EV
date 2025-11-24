@@ -1,10 +1,13 @@
 import { Box, Typography, Button, Container, Stack } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
+import { useContext } from "react";
+import { AuthContext } from "./context/AuthContext";
 import "./Home.css";
 
 export default function Home() {
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);  // ← Get logged-in user
 
   return (
     <Container maxWidth="md" className="home-container">
@@ -18,7 +21,6 @@ export default function Home() {
           Manage, monitor, and optimize your EV battery data seamlessly.
         </Typography>
 
-        {/* Button group */}
         <Stack
           direction={{ xs: "column", sm: "row" }}
           spacing={2}
@@ -35,23 +37,40 @@ export default function Home() {
             View All Batteries
           </Button>
 
-          <Button
-            variant="outlined"
-            color="secondary"
-            size="large"
-            onClick={() => navigate("/users/login")}
-          >
-            Login
-          </Button>
+          {/* 👇 Only show Login/Signup if NOT logged in */}
+          {!user && (
+            <>
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="large"
+                onClick={() => navigate("/users/login")}
+              >
+                Login
+              </Button>
 
-          <Button
-            variant="outlined"
-            color="success"
-            size="large"
-            onClick={() => navigate("/users/signup")}
-          >
-            Signup
-          </Button>
+              <Button
+                variant="outlined"
+                color="success"
+                size="large"
+                onClick={() => navigate("/users/signup")}
+              >
+                Signup
+              </Button>
+            </>
+          )}
+
+          {/* 👇 Show account button if user IS logged in */}
+          {user && (
+            <Button
+              variant="contained"
+              color="success"
+              size="large"
+              onClick={() => navigate("/profile")}
+            >
+              My Account
+            </Button>
+          )}
         </Stack>
       </Box>
     </Container>

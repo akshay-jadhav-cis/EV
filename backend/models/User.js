@@ -1,6 +1,9 @@
 const mongoose=require("mongoose");
 const Schema=mongoose.Schema;
 const userSchema=new Schema({
+    googleId:{
+        type:String
+    },
     name:{
         type:String,
         required:true
@@ -10,11 +13,11 @@ const userSchema=new Schema({
     },
     mobilenumber:{
         type:Number,
-        required:true
+       
     },
     password:{
         type:String,
-        required:true
+        
     },
     hasvehicle:{
         type:String,

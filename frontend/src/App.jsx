@@ -1,7 +1,7 @@
-// App.jsx
-import { Routes, Route, Link } from "react-router-dom";
-import { AppBar, Toolbar, Typography, Button, Container, Box } from "@mui/material";
-import { BatteryChargingFull } from "@mui/icons-material";
+
+import { Routes, Route } from "react-router-dom";
+import { Container, Box, Typography } from "@mui/material";
+
 import Home from "./Home.jsx";
 import AllBatery from "./battery/AllBatery.jsx";
 import AddBatery from "./battery/AddBatery.jsx";
@@ -9,53 +9,54 @@ import ViewBatery from "./battery/ViewBatery.jsx";
 import EditBatery from "./battery/EditBatery.jsx";
 import UserSignupPage from "./users/UserSignupPage.jsx";
 import UserLoginPage from "./users/UserLoginPage.jsx";
+
+import Nav from "./components/Nav";
+import ProtectedRoute from "./components/ProtectedRoute";
+
 import "./App.css";
 
 function App() {
   return (
     <>
-      
-      <AppBar position="static" sx={{ bgcolor: "#daf2ee" }}>
-        <Toolbar className="navbar">
-          <Box display="flex" alignItems="center" gap={1}>
-            <BatteryChargingFull fontSize="large" />
-            <Typography
-              variant="h6"
-              component="div"
-              sx={{ fontWeight: 600, color: "black" }}
-            >
-              Battery Management
-            </Typography>
-          </Box>
-
-          <Box className="nav-links">
-            <Button color="inherit" sx={{ color: "black" }} component={Link} to="/">
-              Home
-            </Button>
-            <Button color="inherit" sx={{ color: "black" }} component={Link} to="/batteries/all">
-              All Batteries
-            </Button>
-            <Button color="inherit" sx={{ color: "black" }} component={Link} to="/batteries/add">
-              Add Battery
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
-
-      
+      <Nav />
       <Container maxWidth="lg" className="main-container">
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/batteries/all" element={<AllBatery />} />
-          <Route path="/batteries/add" element={<AddBatery />} />
-          <Route path="/batteries/:id/view" element={<ViewBatery />} />
-          <Route path="/batteries/:id/edit" element={<EditBatery />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/batteries/add"
+            element={
+              <ProtectedRoute>
+                <AddBatery />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/batteries/:id/view"
+            element={
+              <ProtectedRoute>
+                <ViewBatery />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/batteries/:id/edit"
+            element={
+              <ProtectedRoute>
+                <EditBatery />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="/users/signup" element={<UserSignupPage />} />
           <Route path="/users/login" element={<UserLoginPage />} />
         </Routes>
       </Container>
-
-      {/* Footer */}
       <Box component="footer" className="footer">
         <Typography variant="body2">
           © {new Date().getFullYear()} Battery Management App

@@ -148,7 +148,6 @@ export default function ViewBattery() {
             <strong>Size:</strong> {battery.sized}
           </Typography>
 
-          {/* ✅ Show owner name (optional, nice for UI) */}
           {battery.owner && (
             <Typography variant="body2" sx={{ mt: 1, color: "gray" }}>
               <strong>Created by:</strong>{" "}

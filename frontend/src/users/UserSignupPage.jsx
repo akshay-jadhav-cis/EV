@@ -38,7 +38,7 @@ export default function UserSignupPage() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUser((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" })); // clear error while typing
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const validate = () => {
@@ -64,22 +64,24 @@ export default function UserSignupPage() {
       const res = await fetch("http://localhost:1000/users/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // ✅ needed if backend uses express-session
+        credentials: "include",
         body: JSON.stringify({ user }),
       });
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.message || "Signup failed");
-      }
+      if (!res.ok) throw new Error(data.message || "Signup failed");
 
       setServerMessage("✅ Signup successful! Redirecting...");
       setTimeout(() => navigate("/batteries/all"), 1500);
     } catch (error) {
-      console.error("Signup error:", error);
       setServerError(error.message || "Something went wrong during signup");
     }
+  };
+
+  // 🌟 GOOGLE SIGN-UP / LOGIN
+  const handleGoogleSignup = () => {
+    window.open("http://localhost:1000/auth/google", "_self");
   };
 
   return (
@@ -112,7 +114,6 @@ export default function UserSignupPage() {
           Quick sign up — you’ll be redirected after successful registration.
         </Typography>
 
-        {/* ✅ Success or error messages */}
         {serverMessage && (
           <Alert severity="success" sx={{ mb: 2 }}>
             {serverMessage}
@@ -231,6 +232,24 @@ export default function UserSignupPage() {
             Sign up
           </Button>
         </Box>
+
+        {/* 🌟 GOOGLE SIGNUP BUTTON */}
+        <Button
+          fullWidth
+          onClick={handleGoogleSignup}
+          sx={{
+            mt: 2,
+            py: 1.2,
+            borderRadius: 2,
+            textTransform: "none",
+            fontWeight: 600,
+            backgroundColor: "#DB4437",
+            color: "white",
+            ":hover": { backgroundColor: "#B33A2E" },
+          }}
+        >
+          Sign up with Google
+        </Button>
 
         <Typography
           variant="body2"

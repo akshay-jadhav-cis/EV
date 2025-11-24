@@ -7,11 +7,14 @@ const PORT = process.env.PORT;
 const methodOverride = require("method-override");
 const cors = require("cors");
 const batteryRoute = require("./routes/batteryRoute");
+const googelAuth=require("./routes/googleRoute")
 const userRoute = require("./routes/userRoute");
 const ExpressError=require("./utils/ExpressError")
 const session=require("express-session");
 const cookieparser=require("cookie-parser");
 const MongoStore = require('connect-mongo');
+const passport=require("passport");
+require('./utils/GoogleAuth.js')
 async function main() {
     await mongoose.connect(process.env.MONGO_URL);
 }
@@ -49,9 +52,11 @@ app.use(session({
     sameSite: 'lax'
   }
 }));
-
+app.use(passport.initialize());
+app.use(passport.session());
 app.use("/batteries",batteryRoute);
 app.use("/users",userRoute);
+app.use("/auth",googelAuth);
 app.use((req,res,next)=>{
     res.locals.currentUser=req.session.user;
 });

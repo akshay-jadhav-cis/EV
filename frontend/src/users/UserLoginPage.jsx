@@ -17,13 +17,13 @@ export default function UserLoginPage() {
   const [serverMessage, setServerMessage] = useState("");
   const isMobile = useMediaQuery("(max-width:600px)");
 
-  // ✅ Handle input changes
+  // Handle input changes
   const handleChange = (e) => {
     setData({ ...data, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" }); // clear error on typing
+    setErrors({ ...errors, [e.target.name]: "" });
   };
 
-  // ✅ Validate inputs before submitting
+  // Validate user inputs
   const validateForm = () => {
     let newErrors = {};
     if (!data.name.trim()) newErrors.name = "Username is required";
@@ -38,18 +38,18 @@ export default function UserLoginPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // ✅ Handle login
+  // Normal Login
   const handleSubmit = async (e) => {
     e.preventDefault();
     setServerMessage("");
 
-    if (!validateForm()) return; // Stop if validation fails
+    if (!validateForm()) return;
 
     try {
       const res = await fetch("http://localhost:1000/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // ⬅️ Important for sessions
+        credentials: "include",
         body: JSON.stringify({ user: data }),
       });
 
@@ -57,15 +57,18 @@ export default function UserLoginPage() {
 
       if (res.ok && result.success) {
         setServerMessage("✅ Login successful!");
-        console.log("User data:", result.user);
         navigate("/batteries/all");
       } else {
         setServerMessage(result.error || result.message || "Login failed");
       }
     } catch (err) {
-      console.error("Login failed:", err);
       setServerMessage("❌ Server error, please try again later.");
     }
+  };
+
+  // GOOGLE LOGIN
+  const handleGoogleLogin = () => {
+    window.open("http://localhost:1000/auth/google", "_self");
   };
 
   return (
@@ -109,9 +112,7 @@ export default function UserLoginPage() {
             onChange={handleChange}
             error={!!errors.name}
             helperText={errors.name}
-            InputProps={{
-              style: { borderRadius: 12 },
-            }}
+            InputProps={{ style: { borderRadius: 12 } }}
           />
 
           <TextField
@@ -124,9 +125,7 @@ export default function UserLoginPage() {
             onChange={handleChange}
             error={!!errors.password}
             helperText={errors.password}
-            InputProps={{
-              style: { borderRadius: 12 },
-            }}
+            InputProps={{ style: { borderRadius: 12 } }}
           />
 
           <Button
@@ -138,24 +137,40 @@ export default function UserLoginPage() {
               py: 1.3,
               borderRadius: "12px",
               fontSize: "1rem",
-              ":hover": {
-                backgroundColor: "#125ca1",
-              },
+              ":hover": { backgroundColor: "#125ca1" },
             }}
           >
             Login
           </Button>
         </Box>
+
+        {/* SERVER MESSAGE */}
         {serverMessage && (
           <Alert
-            severity={
-              serverMessage.includes("✅") ? "success" : "error"
-            }
+            severity={serverMessage.includes("✅") ? "success" : "error"}
             sx={{ mt: 3, borderRadius: "10px" }}
           >
             {serverMessage}
           </Alert>
         )}
+
+        {/* GOOGLE LOGIN BUTTON */}
+        <Button
+          onClick={handleGoogleLogin}
+          fullWidth
+          sx={{
+            mt: 2,
+            py: 1.3,
+            borderRadius: "12px",
+            fontSize: "1rem",
+            backgroundColor: "#DB4437",
+            color: "white",
+            textTransform: "none",
+            ":hover": { backgroundColor: "#B33A2E" },
+          }}
+        >
+          Continue with Google
+        </Button>
 
         <Typography
           variant="body2"
