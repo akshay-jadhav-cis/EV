@@ -3,78 +3,110 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 const path = require("path");
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 1000;
 const methodOverride = require("method-override");
 const cors = require("cors");
 const batteryRoute = require("./routes/batteryRoute");
-const googelAuth=require("./routes/googleRoute")
+const googleAuth = require("./routes/googleRoute");
 const userRoute = require("./routes/userRoute");
-const ExpressError=require("./utils/ExpressError")
-const session=require("express-session");
-const cookieparser=require("cookie-parser");
-const MongoStore = require('connect-mongo');
-const passport=require("passport");
-require('./utils/GoogleAuth.js')
+const ExpressError = require("./utils/ExpressError");
+const session = require("express-session");
+const cookieParser = require("cookie-parser");
+const MongoStore = require("connect-mongo");
+const passport = require("passport");
+require("./utils/GoogleAuth.js");
+
+// =======================
+// Database Connection
+// =======================
 async function main() {
-    await mongoose.connect(process.env.MONGO_URL);
+  await mongoose.connect(process.env.MONGO_URL);
 }
 mongoose.set("strictQuery", true);
-main().then(() => {
-    console.log("Database Connection Successfully");
-}).catch((e) => {
-    console.error("Error occurred During the Database Connection = ",e);
-});
-app.use(cookieparser());
+main()
+  .then(() => console.log("Database Connected"))
+  .catch((e) => console.error("DB Error:", e));
+
+// =======================
+// Middleware
+// =======================
+app.use(cookieParser());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride("_method"));
-app.use(express.static(path.join(__dirname, "public")))
-app.use(cors({
-    origin: "http://localhost:2000",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+app.use(express.static(path.join(__dirname, "public")));
+
+// =======================
+// CORS FIXED ✔
+// =======================
+app.use(
+  cors({
+    origin: "http://localhost:2000", // FRONTEND
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
-}))
-app.use(session({
-  secret: process.env.SESSION_SECRET_CODE,
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URL,
-    collectionName: 'sessions',
-    ttl: 14 * 24 * 60 * 60, 
-    autoRemove: 'native'
-  }),
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 24 * 7, 
-    httpOnly: true,
-    secure: false, // use true only if HTTPS
-    sameSite: 'lax'
-  }
-}));
+  })
+);
+
+// =======================
+// Session Setup ✔
+// =======================
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET_CODE,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URL,
+      collectionName: "sessions",
+      ttl: 14 * 24 * 60 * 60,
+    }),
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      httpOnly: true,
+      secure: false, // important for localhost (NO HTTPS)
+      sameSite: "lax",
+    },
+  })
+);
+
 app.use(passport.initialize());
 app.use(passport.session());
-app.use("/batteries",batteryRoute);
-app.use("/users",userRoute);
-app.use("/auth",googelAuth);
-app.use((req,res,next)=>{
-    res.locals.currentUser=req.session.user;
+
+// =======================
+// Global Session User
+// =======================
+app.use((req, res, next) => {
+  res.locals.currentUser = req.session.user || null;
+  next();
 });
-app.use((req,res,next)=>{
-    next(new ExpressError("Page Not Found",404));
-})
+
+// =======================
+// Routes
+// =======================
+app.use("/batteries", batteryRoute);
+app.use("/users", userRoute);
+app.use("/auth", googleAuth);
+
+// =======================
+// 404 Handler
+// =======================
+app.use((req, res, next) => {
+  next(new ExpressError("Page Not Found", 404));
+});
+
+// =======================
+// Error Handler
+// =======================
 app.use((err, req, res, next) => {
   const status = err.statusCode || 500;
   const message = err.message || "Something went wrong";
-
-  console.error("❌ Express Error:", err);
+  console.error("❌ Server Error:", err);
 
   res.status(status).json({
     success: false,
     message,
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }), // show stack only in dev
   });
 });
-app.listen(PORT, (req, res) => {
-    console.log(`Port Is Listening At ${PORT}`);
-});
+
+app.listen(PORT, () => console.log(`Server running on PORT ${PORT}`));

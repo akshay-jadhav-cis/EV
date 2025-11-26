@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
 
 export const AuthContext = createContext(null);
 
@@ -6,20 +7,23 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Restore session from backend
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("user");
-      if (raw) setUser(JSON.parse(raw));
-    } catch (e) {
-      console.error("Failed to parse user from localStorage", e);
-    } finally {
-      setLoading(false);
-    }
+    axios
+      .get("http://localhost:1000/users/check-session", {
+        withCredentials: true,
+      })
+      .then((res) => {
+        if (res.data.loggedIn) {
+          setUser(res.data.user);
+        }
+      })
+      .catch((err) => console.error("Check session error:", err))
+      .finally(() => setLoading(false));
   }, []);
 
-  const login = (u) => {
-    setUser(u);
-    localStorage.setItem("user", JSON.stringify(u));
+  const login = (userData) => {
+    setUser(userData);
   };
 
   const logout = () => {
@@ -27,15 +31,15 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("user");
   };
 
-  const value = { user, loading, login, logout, setUser };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, loading, login, logout, setUser }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (ctx === undefined || ctx === null) {
-    throw new Error("useAuth must be used within an <AuthProvider>.");
-  }
+  if (!ctx) throw new Error("useAuth must be inside <AuthProvider>");
   return ctx;
 }

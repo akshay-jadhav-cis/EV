@@ -67,7 +67,8 @@ export default function AddBattery() {
       }
 
       const res = await axios.post("http://localhost:1000/batteries/add", formData, {
-        withCredentials: true, // ✅ include session cookie
+        withCredentials: true, 
+        
       });
 
       if (res.data.success) {

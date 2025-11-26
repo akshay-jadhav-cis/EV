@@ -5,7 +5,7 @@ const { hashPassword, hashCompare } = require("../utils/Password");
 const wrapAsync = require("../utils/wrapAsync");
 const { isLoggedIn } = require("../utils/Valid");
 
-// SIGNUP
+// SIGNUP (does NOT auto login)
 userRoute.post("/signup", wrapAsync(async (req, res) => {
   const { user } = req.body;
 
@@ -28,9 +28,10 @@ userRoute.post("/login", wrapAsync(async (req, res) => {
   const findUser = await User.findOne({ name: user.name });
   if (!findUser) return res.status(404).json({ error: "User not found" });
 
-  const checkPassword = await hashCompare(user.password, findUser.password);
-  if (!checkPassword) return res.status(401).json({ error: "Password mismatch" });
+  const valid = await hashCompare(user.password, findUser.password);
+  if (!valid) return res.status(401).json({ error: "Password mismatch" });
 
+  // Save session
   req.session.user = {
     id: findUser._id,
     name: findUser.name,
@@ -44,34 +45,29 @@ userRoute.post("/login", wrapAsync(async (req, res) => {
 // CHECK SESSION
 userRoute.get("/check-session", (req, res) => {
   if (req.session.user) {
-    res.json({ loggedIn: true, user: req.session.user });
-  } else {
-    res.json({ loggedIn: false });
+    return res.json({ loggedIn: true, user: req.session.user });
   }
+  res.json({ loggedIn: false });
 });
 
 // LOGOUT
 userRoute.post("/logout", (req, res) => {
-  req.session.destroy(err => {
+  req.session.destroy((err) => {
     if (err) return res.status(500).json({ success: false, message: "Logout failed" });
-
     res.clearCookie("connect.sid");
     res.json({ success: true, message: "Logged out successfully" });
   });
 });
 
-// GET USER BATTERIES
-userRoute.post(
+userRoute.get(
   "/profile/:id/ownbattery",
-  isLoggedIn,
+  
   wrapAsync(async (req, res) => {
     const { id } = req.params;
 
     const user = await User.findById(id).populate("batteries");
 
-    if (!user) {
-      return res.json({ message: "User Does Not Exist" });
-    }
+    if (!user) return res.json({ message: "User Does Not Exist" });
 
     res.json(user.batteries);
   })

@@ -1,25 +1,19 @@
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function UserProfile() {
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const userId = user?._id;
+  const navigate = useNavigate();
 
-  const handleClick = () => {
-    if (!userId) {
-      alert("Please login first.");
-      return;
-    }
-    navigate(`/users/profile/${userId}/ownbattery`);
-  };
+  if (!user) return <p>Please login first.</p>;
 
   return (
     <div>
-      <h2>My Profile</h2>
-      <p>{user ? `Name: ${user.name}` : "Not logged in"}</p>
-      <button type="button" onClick={handleClick}>
-        own batteries
+      <h2>Welcome, {user.name}</h2>
+      <button
+        onClick={() => navigate(`/users/profile/${user.id}/ownbattery`)}
+      >
+        View My Batteries
       </button>
     </div>
   );

@@ -23,10 +23,12 @@ const userSchema=new Schema({
         type:String,
         enum:["yes","no"]
     },
-    battery:[{
-        type:Schema.Types.ObjectId,
-        ref:"battery"
-    }]
+     batteries: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Battery"
+    }
+  ]
 });
 const User=new mongoose.model("user",userSchema);
 module.exports=User;
