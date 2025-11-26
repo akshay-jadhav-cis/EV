@@ -1,25 +1,41 @@
-import { createContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
-export const AuthContext = createContext();
+export const AuthContext = createContext(null);
 
-export default function AuthProvider({ children }) {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch session on app load
   useEffect(() => {
-    fetch("http://localhost:1000/auth/login/success", {
-      method: "GET",
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.loggedIn) setUser(data.user);
-      });
+    try {
+      const raw = localStorage.getItem("user");
+      if (raw) setUser(JSON.parse(raw));
+    } catch (e) {
+      console.error("Failed to parse user from localStorage", e);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, setUser }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const login = (u) => {
+    setUser(u);
+    localStorage.setItem("user", JSON.stringify(u));
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem("user");
+  };
+
+  const value = { user, loading, login, logout, setUser };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (ctx === undefined || ctx === null) {
+    throw new Error("useAuth must be used within an <AuthProvider>.");
+  }
+  return ctx;
 }

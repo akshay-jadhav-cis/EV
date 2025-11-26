@@ -1,13 +1,12 @@
 import { Box, Typography, Button, Container, Stack } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
-import { useContext } from "react";
-import { AuthContext } from "./context/AuthContext";
+import { useAuth } from "./context/AuthContext";
 import "./Home.css";
 
 export default function Home() {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);  // ← Get logged-in user
+  const { user } = useAuth();
 
   return (
     <Container maxWidth="md" className="home-container">
@@ -37,7 +36,6 @@ export default function Home() {
             View All Batteries
           </Button>
 
-          {/* 👇 Only show Login/Signup if NOT logged in */}
           {!user && (
             <>
               <Button
@@ -60,13 +58,12 @@ export default function Home() {
             </>
           )}
 
-          {/* 👇 Show account button if user IS logged in */}
           {user && (
             <Button
               variant="contained"
               color="success"
               size="large"
-              onClick={() => navigate("/profile")}
+              onClick={() => navigate("/users/profile")}
             >
               My Account
             </Button>

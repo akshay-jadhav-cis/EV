@@ -1,45 +1,44 @@
 import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
 import { BatteryChargingFull } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
-import { useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function Nav() {
   const navigate = useNavigate();
-  const { user, setUser } = useContext(AuthContext);
+  const { user, setUser, logout } = useAuth();
 
   const handleLogout = async () => {
-  try {
-    await fetch("http://localhost:1000/auth/logout", {
-      method: "GET",
-      credentials: "include",
-    });
+    try {
+      const res = await fetch("http://localhost:1000/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
 
-    setUser(null);  
-    navigate("/"); 
-  } catch (error) {
-    console.log("Logout error:", error);
-  }
-};
+      if (!res.ok) {
+        console.error("Logout failed", res.status);
+        alert("Logout failed. Try again.");
+        return;
+      }
 
+      // update client state
+      logout(); // clears localStorage and user state
+      navigate("/");
+    } catch (error) {
+      console.log("Logout error:", error);
+      alert("Logout error. See console.");
+    }
+  };
 
   return (
     <AppBar position="static" sx={{ bgcolor: "#daf2ee" }}>
-      <Toolbar className="navbar">
-        {/* Left Section */}
-        <Box display="flex" alignItems="center" gap={1}>
+      <Toolbar className="navbar" sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Box display="flex" alignItems="center" gap={1} sx={{ cursor: "pointer" }} onClick={() => navigate("/")}>
           <BatteryChargingFull fontSize="large" />
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ fontWeight: 600, color: "black", cursor: "pointer" }}
-            onClick={() => navigate("/")}
-          >
+          <Typography variant="h6" sx={{ fontWeight: 600, color: "black" }}>
             Battery Management
           </Typography>
         </Box>
 
-        {/* Right Side Links */}
         <Box display="flex" alignItems="center" gap={2}>
           <Button sx={{ color: "black" }} component={Link} to="/">
             Home
@@ -55,37 +54,24 @@ export default function Nav() {
             </Button>
           )}
 
-          {/* ========= NOT LOGGED IN ========= */}
           {!user && (
             <>
-              <Button
-                sx={{ color: "black" }}
-                component={Link}
-                to="/users/login"
-              >
+              <Button sx={{ color: "black" }} component={Link} to="/users/login">
                 Login
               </Button>
 
-              <Button
-                sx={{ color: "black" }}
-                component={Link}
-                to="/users/signup"
-              >
+              <Button sx={{ color: "black" }} component={Link} to="/users/signup">
                 Signup
               </Button>
             </>
           )}
 
-          {/* ========= LOGGED IN ========= */}
           {user && (
             <>
               <Typography sx={{ color: "black", fontWeight: 600 }}>
                 Hi, {user.name}
               </Typography>
-              <Button
-                sx={{ color: "red", fontWeight: 600 }}
-                onClick={handleLogout}
-              >
+              <Button sx={{ color: "red", fontWeight: 600 }} onClick={handleLogout}>
                 Logout
               </Button>
             </>

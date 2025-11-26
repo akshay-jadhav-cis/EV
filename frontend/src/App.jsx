@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 import { Container, Box, Typography } from "@mui/material";
 
@@ -14,6 +13,8 @@ import Nav from "./components/Nav";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./App.css";
+import UserHaveOwnBattery from "./users/UserHaveOwnBattery.jsx";
+import UserProfile from "./users/UserProfile.jsx";
 
 function App() {
   return (
@@ -55,6 +56,13 @@ function App() {
 
           <Route path="/users/signup" element={<UserSignupPage />} />
           <Route path="/users/login" element={<UserLoginPage />} />
+          <Route path="/users/profile" element={<UserProfile />} />
+
+          {/* User owned batteries - route uses /users/... (frontend) */}
+          <Route
+            path="/users/profile/:id/ownbattery"
+            element={<UserHaveOwnBattery />}
+          />
         </Routes>
       </Container>
       <Box component="footer" className="footer">
